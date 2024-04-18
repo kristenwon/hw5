@@ -13,8 +13,7 @@ using namespace std;
 
 
 // Add prototypes of helper functions here
-bool is_valid(const std::string& word, const std::set<std::string>& dict);
-void wordleHelper(const std::string& in, const std::string& floating, const std::set<std::string>& dict, std::string& partialWord, int usedCount[], int position, set<std::string>& result);
+void wordleHelper(const std::string& in, const std::string& floating, const std::set<std::string>& dict, std::string& partialWord, std::map<char, int>& usedCount, int position, set<std::string>& result);
 
 // Definition of primary wordle function
 std::set<std::string> wordle(
@@ -25,34 +24,27 @@ std::set<std::string> wordle(
     // Add your code here
     std::set<std::string> result;
     std::string partialWord(in.length(), '-');
-    int floatingCount[26] = {0};
+    std::map<char, int> floatingCount;
 
-    for(int i=0; i < floating.size(); ++i){
-        char character = floating[i];
-        floatingCount[character - 'a']--;
+    for(char character : floating){
+        floatingCount[character]--;
     }
     wordleHelper(in, floating, dict, partialWord, floatingCount, 0, result);
     return result;
 }
 
-// Define any helper functions here
-bool is_valid(const std::string& word, const std::set<std::string>& dict)
-{
-    return dict.find(word) != dict.end();
-}
-
-void wordleHelper(const std::string& in, const std::string& floating, const std::set<std::string>& dict, std::string& partialWord, int usedCount[], int position, set<std::string>& result)
+void wordleHelper(const std::string& in, const std::string& floating, const std::set<std::string>& dict, std::string& partialWord, std::map<char, int>& usedCount, int position, set<std::string>& result)
 {
     // bc. partial word is complete
     if(position == in.length()){
         bool done = true;
-        for(int i=0; i < 26; ++i){
-            if(usedCount[i] < 0){
+        for(auto& pair : usedCount){
+            if(pair.second < 0){
                 done = false;
                 break;
             }
         }
-        if(done && is_valid(partialWord, dict)){
+        if(done && dict.find(partialWord) != dict.end()){
             result.insert(partialWord);
         }
         return;
@@ -66,10 +58,9 @@ void wordleHelper(const std::string& in, const std::string& floating, const std:
     else {
         for(char character='a'; character <= 'z'; ++character){
             partialWord[position] = character;
-            int curr = character - 'a';
-            usedCount[curr]++;
+            usedCount[character]++;
             wordleHelper(in, floating, dict, partialWord, usedCount, position+1, result);
-            usedCount[curr]--;
+            usedCount[character]--;
     }
     }
 }
