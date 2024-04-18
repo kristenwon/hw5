@@ -19,16 +19,13 @@ using namespace std;
 // Feel free to not use or delete.
 static const Worker_T INVALID_ID = (unsigned int)-1;
 
-bool schedule(
-    const AvailabilityMatrix& avail,
-    const size_t dailyNeed,
-    const size_t maxShifts,
-    DailySchedule& sched
-);
 
-bool backtrackSchedule(const AvailabilityMatrix& avail, const size_t dailyNeed, const size_t maxShifts, DailySchedule& sched, size_t dayIndex, std::vector<size_t>& shiftsCount);
+// Add prototypes for any helper functions here
+bool backtrackSchedule(const AvailabilityMatrix& avail, size_t dailyNeed, size_t maxShifts, DailySchedule& sched, size_t dayIndex, vector<size_t>& shiftsCount);
+bool isValidAssignment(const AvailabilityMatrix& avail, size_t workerIndex, size_t dayIndex, size_t maxShifts, const vector<size_t>& shiftsCount);
 
-bool isValidAssignment(const AvailabilityMatrix& avail, const size_t workerIndex, const size_t dayIndex, const size_t maxShifts, DailySchedule& sched, const std::vector<size_t>& shiftsCount);
+
+// Add your implementation of schedule() and other helper functions here
 
 bool schedule(
     const AvailabilityMatrix& avail,
@@ -37,42 +34,40 @@ bool schedule(
     DailySchedule& sched
 ) 
 {
-    if (avail.empty()) {
+    if(avail.size() == 0U){
         return false;
     }
     sched.clear();
-    sched.resize(avail.size());
-    std::vector<size_t> shiftsCount(avail[0].size(), 0);
+    // Add your code below
+    sched.resize(avail.size(), vector<Worker_T>());
+    vector<size_t> shiftsCount(avail[0].size(), 0);
 
     return backtrackSchedule(avail, dailyNeed, maxShifts, sched, 0, shiftsCount);
 }
 
-bool backtrackSchedule(const AvailabilityMatrix& avail, const size_t dailyNeed, const size_t maxShifts, DailySchedule& sched, size_t dayIndex, std::vector<size_t>& shiftsCount) {
-    if (dayIndex == avail.size()) {
+bool backtrackSchedule(const AvailabilityMatrix& avail, const size_t dailyNeed, const size_t maxShifts, DailySchedule& sched, size_t dayIndex, vector<size_t>& shiftsCount){
+    if(dayIndex == avail.size()){
         return true;
     }
 
-    for (size_t workerIndex = 0; workerIndex < avail[dayIndex].size(); ++workerIndex) {
-        if (isValidAssignment(avail, workerIndex, dayIndex, maxShifts, sched, shiftsCount)) {
+    if(sched[dayIndex].size() == dailyNeed){
+        return backtrackSchedule(avail, dailyNeed, maxShifts, sched, dayIndex + 1, shiftsCount);
+    }
+
+    for(size_t workerIndex = 0; workerIndex < avail[dayIndex].size(); ++workerIndex){
+        if(isValidAssignment(avail, workerIndex, dayIndex, maxShifts, shiftsCount)){
             sched[dayIndex].push_back(workerIndex);
             shiftsCount[workerIndex]++;
-            if (backtrackSchedule(avail, dailyNeed, maxShifts, sched, dayIndex + 1, shiftsCount)) {
+            if(backtrackSchedule(avail, dailyNeed, maxShifts, sched, dayIndex, shiftsCount)){
                 return true;
             }
             sched[dayIndex].pop_back();
             shiftsCount[workerIndex]--;
         }
     }
-
-    if (dayIndex == 0 && !sched[0].empty()) {
-        return false;
-    } else if (dayIndex > 0 && sched[dayIndex - 1].empty()) {
-        return false;
-    }
-
     return false;
 }
 
-bool isValidAssignment(const AvailabilityMatrix& avail, const size_t workerIndex, const size_t dayIndex, const size_t maxShifts, DailySchedule& sched, const std::vector<size_t>& shiftsCount) {
+bool isValidAssignment(const AvailabilityMatrix& avail, size_t workerIndex, size_t dayIndex, size_t maxShifts, const vector<size_t>& shiftsCount){
     return avail[dayIndex][workerIndex] && shiftsCount[workerIndex] < maxShifts;
 }
