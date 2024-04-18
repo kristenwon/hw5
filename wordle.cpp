@@ -23,12 +23,13 @@ std::set<std::string> wordle(
 {
     // Add your code here
     std::set<std::string> result;
-    std::string partialWord(in.length(), '-');
+    std::string partialWord = in;
     std::map<char, int> floatingCount;
 
     for(char character : floating){
         floatingCount[character]--;
     }
+    
     wordleHelper(in, floating, dict, partialWord, floatingCount, 0, result);
     return result;
 }
@@ -37,30 +38,48 @@ void wordleHelper(const std::string& in, const std::string& floating, const std:
 {
     // bc. partial word is complete
     if(position == in.length()){
-        bool done = true;
-        for(auto& pair : usedCount){
-            if(pair.second < 0){
-                done = false;
-                break;
-            }
-        }
-        if(done && dict.find(partialWord) != dict.end()){
+        if(floating.empty() && dict.find(partialWord) != dict.end()){
             result.insert(partialWord);
         }
         return;
     }
 
     if(in[position] != '-'){
-        char fixedLetter = in[position];
-        partialWord[position] = fixedLetter;
+        partialWord[position] = in[position];
         wordleHelper(in, floating, dict, partialWord, usedCount, position+1, result);
     }
     else {
-        for(char character='a'; character <= 'z'; ++character){
-            partialWord[position] = character;
-            usedCount[character]++;
-            wordleHelper(in, floating, dict, partialWord, usedCount, position+1, result);
-            usedCount[character]--;
-    }
+        int numdash = 0;
+        for(char c : partialWord){
+            if(c == '-'){
+                numdash++;
+            }
+        }
+        if(floating.size() == numdash){
+            for(int i=0; i < floating.size(); i++){
+                partialWord[position] = floating[i];
+                string newFloating = floating;
+                newFloating.erase(i, 1);
+                wordleHelper(in, newFloating, dict, partialWord, usedCount, position+1, result);
+            }
+        }
+        else {
+            for(char c = 'a'; c <= 'z'; c++){
+                partialWord[position] = c;
+                if(usedCount[c] < 0){
+                    string newFloating = floating;
+                    int pos = newFloating.find(c);
+                    if(pos != string::npos){
+                        newFloating.erase(pos, 1);
+                    }
+                    wordleHelper(in, newFloating, dict, partialWord, usedCount, position+1, result);
+                }
+                else {
+                    wordleHelper(in, floating, dict, partialWord, usedCount, position+1, result);
+                }
+
+            }
+        }
+        partialWord[position] = '-';
     }
 }
